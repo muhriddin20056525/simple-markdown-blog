@@ -1,9 +1,9 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import clientPromise from "./mongodb";
-import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import { UserModel } from "@/models/User";
+import { connectToMongoose } from "./mongoose";
 
+// Interface for session
 declare module "next-auth" {
   interface Session {
     user: {
@@ -17,8 +17,6 @@ declare module "next-auth" {
 }
 
 export const authOptions: NextAuthOptions = {
-  adapter: MongoDBAdapter(clientPromise),
-
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -27,20 +25,44 @@ export const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
+    // This funktion need for save user to MONGODB
+    async signIn({ user, account }) {
+      // Connect MongoDB
+      await connectToMongoose();
+
+      // Find user by email
+      const existingUser = await UserModel.findOne({ email: user.email });
+
+      // IF user not to MonogDB We create new user
+      if (!existingUser) {
+        await UserModel.create({
+          name: user.name,
+          email: user.email,
+          role: "USER",
+          image: user.image,
+        });
+      }
+
+      return true;
+    },
+
     session: async ({ session, token }) => {
       if (session?.user && token.sub) {
-        session.user.id = token.sub;
+        // Find user by email
+        const user = await UserModel.findOne({ email: session.user.email });
 
-        const user = await UserModel.findOne({ id: token.sub });
-
-        session.user.role = user.role || "USER";
+        // Save User Role to Session Role
+        session.user.role = user?.role || "USER";
+        // Save User ID to Session ID
+        session.user.id = user?._id;
       }
       return session;
     },
 
     jwt: async ({ user, token }) => {
       if (user) {
-        token.uid = user.id;
+        // Save userId to Token
+        token.sub = user.id;
       }
       return token;
     },

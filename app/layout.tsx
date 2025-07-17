@@ -29,7 +29,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        {/* Auth provider for using useSession hook */}
         <AuthProvider>
+          {/* Navbar Component */}
           <Navbar />
           {children}
         </AuthProvider>
