@@ -60,7 +60,12 @@ function AuthButton() {
         </DropdownMenuItem>
 
         {/* Logout Button */}
-        <DropdownMenuItem onClick={() => signOut()}>SignOut</DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => signOut()}
+          className="font-semibold text-muted-foreground"
+        >
+          Sign Out
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
