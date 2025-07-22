@@ -40,6 +40,8 @@ function CreatePostPage() {
       published,
     });
 
+    console.log(data);
+
     if (data.success) {
       // Reset form fields after successful post creation
       setTitle("");

@@ -1,12 +1,13 @@
 import { authOptions } from "@/lib/auth";
-import { connectToMongoose } from "@/lib/mongoose";
+import { connectToDb } from "@/lib/mongoose";
+import { Post } from "@/models/Post";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
 // Create Post API Route
 export async function POST(request: Request) {
   // Connect to MongoDB
-  await connectToMongoose();
+  await connectToDb();
   // Get the post data from the request body
   const { title, content, published } = await request.json();
 
@@ -27,18 +28,40 @@ export async function POST(request: Request) {
 
   try {
     // Create a new post object
-    const post = {
+    const post = await Post.create({
       title,
       content,
       published,
-      userId: session.user.id,
-    };
+      author: session.user.id,
+    });
 
     // Return the created post as a response
     return NextResponse.json({ success: true, post }, { status: 201 });
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to create post" },
+      { error: `Failed to create post ${error}` },
+      { status: 500 }
+    );
+  }
+}
+
+// Get Posts API Route
+export async function GET() {
+  // Connect to MongoDB
+  await connectToDb();
+
+  try {
+    // Fetch all posts from the database
+    const posts = await Post.find({ published: true }).populate(
+      "author",
+      "name email, image"
+    );
+
+    // Return the posts as a response
+    return NextResponse.json({ success: true, posts }, { status: 200 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: `Failed to fetch posts ${error}` },
       { status: 500 }
     );
   }

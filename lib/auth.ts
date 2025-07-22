@@ -1,7 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { UserModel } from "@/models/User";
-import { connectToMongoose } from "./mongoose";
+import { connectToDb } from "./mongoose";
 
 // Interface for session
 declare module "next-auth" {
@@ -28,7 +28,7 @@ export const authOptions: NextAuthOptions = {
     // This funktion need for save user to MONGODB
     async signIn({ user, account }) {
       // Connect MongoDB
-      await connectToMongoose();
+      await connectToDb();
 
       // Find user by email
       const existingUser = await UserModel.findOne({ email: user.email });
