@@ -1,19 +1,61 @@
 "use client";
 
+import CommentCard from "@/components/CommentCard";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Comment, Post } from "@/types";
 import axios from "axios";
 import { Heart, MessageCircle } from "lucide-react";
 import { useParams } from "next/navigation";
-import { use, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 function PostDetailPage() {
   const params = useParams();
   const id = params?.id as string;
   // State for the post
   const [post, setPost] = useState<Post | null>(null);
+  // State for Comment Content
+  const [commentContent, setCommentContent] = useState<string>("");
+  // State for comments
+  const [comments, setComments] = useState<Comment[]>([]);
+
+  // Create a new comment
+  const handleCommentSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    // Check if comment content is empty
+    if (!commentContent.trim()) {
+      return;
+    }
+
+    try {
+      const { data } = await axios.post("/api/posts/comments", {
+        post: id,
+        content: commentContent,
+      });
+
+      if (data.success) {
+        setCommentContent("");
+      }
+
+      fetchComments(id);
+    } catch (error) {
+      console.log("Failed to create comment:", error);
+    }
+  };
+
+  // Fetch Comment
+  const fetchComments = async (postId: string) => {
+    try {
+      const { data } = await axios.get(`/api/posts/comments?postId=${postId}`);
+      setComments(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   // Fetch post data
   useEffect(() => {
@@ -24,7 +66,9 @@ function PostDetailPage() {
       }
     };
     fetchPost();
-  }, [params.id]);
+
+    fetchComments(id);
+  }, [id]);
 
   // If post is not loaded yet, show loading state
   if (!post) {
@@ -82,8 +126,32 @@ function PostDetailPage() {
 
       {/* Comments Section */}
       <Card className="mt-10 p-4">
-        <h2 className="text-lg font-semibold mb-3">Comments</h2>
-        <p className="text-sm text-muted-foreground">No comments yet.</p>
+        <h2 className="text-lg font-semibold">Comments</h2>
+
+        {/* Comment Form */}
+        <form onSubmit={handleCommentSubmit}>
+          <Textarea
+            placeholder="Enter your comment"
+            className="h-18 resize-none"
+            value={commentContent}
+            onChange={(e) => setCommentContent(e.target.value)}
+            required
+          ></Textarea>
+
+          <Button type="submit" className="mt-2 ml-auto block">
+            Post Comment
+          </Button>
+        </form>
+
+        <div>
+          {comments.length > 0 ? (
+            comments.map((comment) => (
+              <CommentCard comment={comment} key={comment._id} />
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground">No comments yet.</p>
+          )}
+        </div>
       </Card>
     </div>
   );

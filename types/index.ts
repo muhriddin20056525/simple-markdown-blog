@@ -1,4 +1,4 @@
-interface Post {
+export interface Post {
   _id: string;
   title: string;
   content: string;
@@ -14,4 +14,14 @@ interface User {
   email: string;
   role: "USER" | "ADMIN";
   image: string;
+}
+
+export interface Comment {
+  _id: string;
+  author: {
+    name: string;
+    image: string;
+  };
+  content: string;
+  createdAt: string;
 }
