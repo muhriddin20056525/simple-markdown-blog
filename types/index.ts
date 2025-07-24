@@ -6,6 +6,7 @@ export interface Post {
   createdAt: Date;
   updatedAt: Date;
   author: User;
+  likes: string[];
 }
 
 interface User {

@@ -1,3 +1,4 @@
+"use client"
 import Link from "next/link";
 import MarkdownRenderer from "./MarkdownRenderer";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -10,12 +11,58 @@ import {
 } from "./ui/card";
 import { Button } from "./ui/button";
 import { Heart, MessageCircle } from "lucide-react";
+import { Post } from "@/types";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { useSession } from "next-auth/react";
 
 type PostCardProps = {
   post: Post;
 };
 
 function PostCard({ post }: PostCardProps) {
+
+  const { data: session } = useSession()
+
+
+
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(post.likes.length);
+  const [commentCount, setCommentCount] = useState(0)
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      setLiked(post.likes.includes(session.user.id));
+    }
+  }, [session, post.likes]);
+
+
+  const handleLike = async () => {
+    const { data } = await axios.post(`/api/posts/${post._id}/like`);
+    console.log(data);
+
+
+    setLiked(data.liked);
+    setLikeCount(data.totalLikes);
+  };
+
+  useEffect(() => {
+    getCommentsCount()
+  }, [])
+
+
+  const getCommentsCount = async () => {
+    try {
+      const { data } = await axios.get(`/api/posts/${post._id}/comment-count`)
+      setCommentCount(data.count)
+
+    } catch (error) {
+      console.log(error);
+
+    }
+  }
+
+
   return (
     <Card className="rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300">
       {/* Card Header */}
@@ -60,10 +107,12 @@ function PostCard({ post }: PostCardProps) {
             variant="ghost"
             size="sm"
             className="flex items-center gap-1 hover:text-red-500 transition-colors"
+            onClick={handleLike}
           >
-            <Heart className="w-4 h-4" />
-            <span>0</span>
+            <Heart className={`w-4 h-4 ${liked ? "fill-red-500 stroke-red-500" : "bg-transparent"}`} />
+            <span>{likeCount}</span>
           </Button>
+
 
           {/* Comment Button */}
           <Button
@@ -72,7 +121,7 @@ function PostCard({ post }: PostCardProps) {
             className="flex items-center gap-1 hover:text-blue-500 transition-colors"
           >
             <MessageCircle className="w-4 h-4" />
-            <span>0</span>
+            <span>{commentCount}</span>
           </Button>
         </div>
 

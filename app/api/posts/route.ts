@@ -33,6 +33,7 @@ export async function POST(request: Request) {
       content,
       published,
       author: session.user.id,
+      like: [],
     });
 
     // Return the created post as a response
