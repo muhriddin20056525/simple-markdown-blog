@@ -1,7 +1,7 @@
 "use client";
 
 import PostCard from "@/components/PostCard";
-import { log } from "node:console";
+import { Post } from "@/types";
 import { useEffect, useState } from "react";
 
 function Home() {
